@@ -20,6 +20,7 @@
     "external_dependencies": {},
     "data": [
         "data/product_category.xml"
+        "data/ir_action_server.xml"
     ],
     "qweb": [
     ],
