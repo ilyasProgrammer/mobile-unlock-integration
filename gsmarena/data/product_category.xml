@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+    <record id="mobiles" model="product.category">
+        <field name="parent_id" ref="product.product_category_all"/>
+        <field name="name">Mobiles</field>
+    </record>
+</data>
+</openerp>

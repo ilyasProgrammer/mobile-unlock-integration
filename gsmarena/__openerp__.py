@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 {
-    "name": """Unlock phone sales""",
-    "summary": """Unlock phone sales""",
+    "name": """gsmarena data load""",
+    "summary": """Load mobiles data form gsmarena.com""",
+    "description": """Load mobiles data form gsmarena.com""",
     "category": "Web",
     "images": [],
     "version": "1.0.0",
@@ -14,13 +15,13 @@
 
     "depends": [
         "base",
-        "web",
-        "point_of_sale",
-        "gsmarena",
+        "product",
     ],
     "external_dependencies": {'python': ['bs4']},
     "data": [
-        "data/ir_action_server.xml"
+        "data/ir_action_server.xml",
+        "data/product_category.xml",
+        "data/cron.xml",
     ],
     "qweb": [
     ],
