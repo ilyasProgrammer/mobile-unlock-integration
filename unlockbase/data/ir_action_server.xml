@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+    <record id="action_unlock_load_unlockbase" model="ir.actions.server">
+        <field name="name">Load data from unlockbase.com</field>
+        <field name="model_id" ref="model_unlock_sales_order"/>
+        <field name="condition">True</field>
+        <field name="type">ir.actions.server</field>
+        <field name="state">code</field>
+        <field name="code">self.action_load_from_unlockbase(cr, uid, context=context)</field>
+    </record>
+    <record id="action_unlock_load_gsmarena" model="ir.actions.server">
+        <field name="name">Load data from gsmarena.com</field>
+        <field name="model_id" ref="model_telegram_command"/>
+        <field name="condition">True</field>
+        <field name="type">ir.actions.server</field>
+        <field name="state">code</field>
+        <field name="code">self.action_load_from_gsmarena(cr, uid, context=context)</field>
+    </record>
+</data>
+</openerp>

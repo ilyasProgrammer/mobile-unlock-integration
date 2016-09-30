@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 {
-    "name": """unlockbase phone sales""",
-    "summary": """unlockbase phone sales""",
-    "description": """Sales of unlock service""",
+    "name": """unlockbase data load""",
+    "summary": """Load mobiles data form unlockbase.com""",
+    "description": """Load mobiles data form unlockbase.com""",
     "category": "Web",
     "images": [],
     "version": "1.0.0",
@@ -18,7 +18,6 @@
         "web",
         "point_of_sale",
         "gsmarena",
-        "unlockbase",
     ],
     "external_dependencies": {'python': ['bs4']},
     "data": [
@@ -29,7 +28,7 @@
     "demo": [
     ],
 
-    'post_load' : '',
+    'post_load': '',
     "pre_init_hook": None,
     "post_init_hook": None,
     "installable": True,

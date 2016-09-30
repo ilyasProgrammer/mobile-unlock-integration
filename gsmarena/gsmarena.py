@@ -8,7 +8,7 @@ import xml.etree.ElementTree
 import base64
 import re
 from bs4 import BeautifulSoup as bs
-
+import string
 
 _logger = logging.getLogger("# " + __name__)
 _logger.setLevel(logging.DEBUG)
@@ -25,12 +25,7 @@ class ProductProduct(models.Model):
     mobile_brand = fields.Char(string='Mobile brand')
     mobile_title = fields.Char(string='Mobile title')
     mobile_slug = fields.Char(string='Mobile slug')
-
-
-class ProductCategory(models.Model):
-    _inherit = 'product.category'
-
-    brand_id = fields.Char(string='Mobile brand')
+    mobile_tech_name = fields.Char(string='Mobile name for binding')
 
 
 class GsmArena(models.Model):
@@ -61,6 +56,7 @@ class GsmArena(models.Model):
                     return
                 vals = {'mobile_id': value['id'],
                         'name': value['name'],
+                        'mobile_tech_name': value['mobile_tech_name'],
                         'mobile_brand': value['brand'],
                         'mobile_slug': value['slug'],
                         'mobile_title': value['title'],
@@ -80,7 +76,7 @@ class GsmArena(models.Model):
         all_brands_names = [r.name for r in all_brands]
         for brand in brands:
             if brand not in all_brands_names:
-                vals = {'brand_id': '', 'name': brand, 'parent_id': mobiles_cat.id}
+                vals = {'brand_id': '', 'name': make_tech_name(brand), 'parent_id': mobiles_cat.id}
                 new_cat = self.env['product.category'].create(vals)
                 _logger.info('New mobile brand added: %s' % new_cat.name)
             else:
@@ -105,7 +101,8 @@ class GsmArena(models.Model):
             for r in mobiles:
                 mobile = {}
                 mobile['name'] = r.find('br').text
-                mobile['brand'] = brand
+                mobile['mobile_tech_name'] = make_tech_name(r.find('br').text)
+                mobile['brand'] = make_tech_name(brand)
                 mobile['title'] = r.find('img').attrs['title']
                 mobile['slug'] = r.find('a').attrs['href'].replace('.php', '')
                 resp = urllib.urlopen(r.find('img').attrs['src'])
@@ -119,6 +116,7 @@ class GsmArena(models.Model):
                 mobile['id'] = mob_id
                 ret[mobile['id']] = mobile
         return ret
+
 
     @api.model
     def get_mobile_id(self, url, mobile):
@@ -149,3 +147,10 @@ def get_http_page(url, params=None):
     response = urllib2.urlopen(req)
     page = response.read()
     return page
+
+
+def make_tech_name(name):
+    name.strip().lower()
+    allow = string.letters + string.digits
+    re.sub('[^%s]' % allow, '', name)
+    return name
