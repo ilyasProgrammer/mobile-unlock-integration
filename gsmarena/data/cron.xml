@@ -2,10 +2,12 @@
 <openerp>
 <data>
     <record model="ir.cron" id="ir_cron_load_gsmarena_data">
-        <field name="name">Automation to load gsmarena.com mobiles data</field>
+        <field name="name">Load gsmarena.com mobiles data</field>
+        <field eval="False" name="active" />
         <field name="interval_number">24</field>
         <field name="interval_type">hours</field>
         <field name="numbercall">-1</field>
+        <field name="priority">100</field>
         <field name="doall" eval="False"/>
         <field name="model" eval="'gsmarena'"/>
         <field name="function" eval="'action_load_from_gsmarena'"/>

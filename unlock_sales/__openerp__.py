@@ -17,7 +17,6 @@
         "base",
         "web",
         "point_of_sale",
-        "gsmarena",
         "unlockbase",
     ],
     "external_dependencies": {'python': ['bs4']},

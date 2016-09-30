@@ -15,7 +15,7 @@ _logger.setLevel(logging.DEBUG)
 
 gsmarena_url = 'http://www.gsmarena.com/results.php3'  # TODO place in ir config parameter
 # brands = ['nokia']  # TODO load brands from somewhere
-brands = ['nokia', 'apple', 'acer', 'huawei']  # TODO load brands from somewhere
+brands = ['Nokia', 'Apple', 'Acer', 'Huawei']  # TODO load brands from somewhere
 
 
 class ProductProduct(models.Model):
@@ -82,6 +82,7 @@ class GsmArena(models.Model):
             else:
                 # TODO check accordance
                 pass
+        return 1
 
     @api.model
     def get_gsmarena_mobiles(self):
@@ -100,7 +101,7 @@ class GsmArena(models.Model):
             mobiles = makers[0].find_all('li')
             for r in mobiles:
                 mobile = {}
-                mobile['name'] = r.find('br').text
+                mobile['name'] = brand + ' ' + r.find('br').text
                 mobile['mobile_tech_name'] = make_tech_name(r.find('br').text)
                 mobile['brand'] = make_tech_name(brand)
                 mobile['title'] = r.find('img').attrs['title']
@@ -150,7 +151,8 @@ def get_http_page(url, params=None):
 
 
 def make_tech_name(name):
-    name.strip().lower()
+    res = name.strip().lower()
+    res = res.replace(' ', '')
     allow = string.letters + string.digits
-    re.sub('[^%s]' % allow, '', name)
-    return name
+    re.sub('[^%s]' % allow, '', res)
+    return res

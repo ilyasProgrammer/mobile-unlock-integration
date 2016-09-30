@@ -16,12 +16,11 @@
     "depends": [
         "base",
         "web",
-        "point_of_sale",
         "gsmarena",
     ],
     "external_dependencies": {'python': ['bs4']},
     "data": [
-        "data/ir_action_server.xml"
+        "data/cron.xml",
     ],
     "qweb": [
     ],

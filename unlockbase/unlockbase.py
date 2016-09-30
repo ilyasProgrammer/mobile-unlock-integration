@@ -38,7 +38,7 @@ class UnlockBase(models.Model):
         _logger.info('Loading of unlockbase.com mobiles database started')
         res = self.check_all()
         if res == 0:
-            _logger.error("Please check brands parser errors")
+            _logger.error("Please check parser errors")
 
     @api.model
     def check_all(self):
@@ -49,12 +49,13 @@ class UnlockBase(models.Model):
         for brand in res.findall('Brand'):
             brand_id = brand.find('ID').text
             brand_name = make_tech_name(brand.find('Name').text)
+            old_brand = self.env['product.category'].browse([('name', '=', brand_name)])
             if brand_name not in all_brands_names:
                 vals = {'brand_id': brand_id, 'name': brand_name, 'parent_id': mobiles_cat.id}
+                # Create brand
                 new_cat = self.env['product.category'].create(vals)
                 _logger.info('New brand created: %s' % new_cat.name)
             else:
-                old_brand = self.env['product.category'].browse([('name', '=', brand_name)])
                 if not old_brand.brand_id or old_brand.brand_id != brand_id:
                     old_brand.brand_id = brand_id
             for mobile in brand.findall('Mobile'):
@@ -72,8 +73,17 @@ class UnlockBase(models.Model):
                             'image': photo,
                             'categ_id': brand_id,
                             'sale_ok': False}
+                    # Create mobile
                     new_mobile = self.env['product.product'].create(vals)
                     _logger.info('New mobile created: %s %s' % (brand_name, new_mobile.name))
+                    # Create category for unlock tools for this phone
+                    vals = {'brand_id': brand_id, 'name': mobile_name, 'parent_id': old_brand.id}
+                    unlock_cat = self.env['product.category'].create(vals)
+                    _logger.info('New unlock_cat created: %s' % unlock_cat.name)
+                    # TODO Create unlock tools for this phone
+                    # vals = {'brand_id': brand_id, 'name': mobile_name, 'parent_id': old_brand.id}
+                    # new_cat = self.env['product.category'].create(vals)
+                    # _logger.info('New brand created: %s' % new_cat.name)
                 else:
                     old_mobile = self.env['product.product'].browse([('mobile_tech_name', '=', mobile_name)])
                     if not old_mobile.unlock_mobile_id or old_mobile.unlock_mobile_id != unlock_mobile_id:
@@ -95,7 +105,8 @@ class UnlockBase(models.Model):
 
 
 def make_tech_name(name):
-    name.strip().lower()
+    res = name.strip().lower()
+    res = res.replace(' ', '')
     allow = string.letters + string.digits
-    re.sub('[^%s]' % allow, '', name)
-    return name
+    re.sub('[^%s]' % allow, '', res)
+    return res
