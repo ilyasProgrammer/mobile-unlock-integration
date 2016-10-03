@@ -37,15 +37,42 @@ class ProductCategory(models.Model):
 class UnlockBase(models.Model):
     _name = 'unlockbase'
 
-    active = fields.Boolean()
+    api_dict = {'group_id': 'ID',
+                'group_name': 'Name',
+                'tool_id': 'ID',
+                'tool_name': 'Name',
+                'credits': 'Credits',
+                'type': 'Type',
+                'sms': 'SMS',
+                'message': 'Message',
+                'delivery_min': 'Delivery.Min',
+                'delivery_max': 'Delivery.Max',
+                'delivery_unit': 'Delivery.Unit',
+                'requires_network': 'Requires.Network',
+                'requires_mobile': 'Requires.Mobile',
+                'requires_provider': 'Requires.Provider',
+                'requires_pin': 'Requires.PIN',
+                'requires_kbh': 'Requires.KBH',
+                'requires_mep': 'Requires.MEP',
+                'requires_prd': 'Requires.PRD',
+                'requires_sn': 'Requires.SN',
+                'requires_secro': 'Requires.SecRO',
+                'requires_reference': 'Requires.Reference',
+                'requires_servicetag': 'Requires.ServiceTag',
+                'requires_icloudemail': 'Requires.ICloudEmail',
+                'requires_icloudphone': 'Requires.ICloudPhone',
+                'requires_icloududid': 'Requires.ICloudUDID',
+                'requires_type': 'Requires.Type',
+                'requires_locks': 'Requires.Locks',
+                }
 
     @api.model
     def action_load_from_unlockbase(self):
         _logger.info('Loading of unlockbase.com mobiles database started')
         all_good = True
         while all_good:
-            all_good = self.create_brands_and_mobiles()  # create, brand, mobile and mobile tools category
-            # all_good = self.create_tools()   # create tools with bound mobiles to it
+            # all_good = self.create_brands_and_mobiles()  # create, brand, mobile and mobile tools category
+            all_good = self.create_tools()   # create tools with bound mobiles to it
             # all_good = self.create_mobiles_tools()  # for each mobile we create available unlock tools
             _logger.info('Data from unlockbase.com loaded successfully')
             return
@@ -53,80 +80,69 @@ class UnlockBase(models.Model):
 
     @api.model
     def create_brands_and_mobiles(self):
-        t = threading.Thread(name='unlockbase data loading daemon', target=self.run)
-        t.daemon = True
-        t.start()
-        return
-
-    def run(self):
-        db = openerp.sql_db.db_connect(self._cr.dbname)
-        registry = openerp.registry(self._cr.dbname)
-        with openerp.api.Environment.manage(), db.cursor() as cr:
-            res = self.get_all_data()
-            if res is False:
-                return False
-            mobiles_cat = registry['product.category'].search(cr, SUPERUSER_ID, [('name', '=', 'Mobiles')], limit=1)
-            all_brands_ids = registry['product.category'].search(cr, SUPERUSER_ID, [('parent_id', '=', mobiles_cat[0])])
-            all_brands = registry['product.category'].browse(cr, SUPERUSER_ID, all_brands_ids)
-            all_brands_names = [r.name for r in all_brands]
-            categ_to_bind = ''
-            for brand in res.findall('Brand'):
-                brand_id = brand.find('ID').text
-                brand_name = make_tech_name(brand.find('Name').text)
-                all_brand_mobiles_ids = registry['product.product'].search(cr, SUPERUSER_ID, [('mobile_brand', '=', brand_name)])
-                all_brand_mobiles_obj = registry['product.product'].browse(cr, SUPERUSER_ID, all_brand_mobiles_ids)
-                all_brand_mobiles = [r.mobile_tech_name for r in all_brand_mobiles_obj]
-                old_brand_ids = registry['product.category'].search(cr, SUPERUSER_ID, [('name', '=', brand_name)])
-                old_brand_obj = registry['product.category'].browse(cr, SUPERUSER_ID, old_brand_ids[0])
-                if brand_name not in all_brands_names:
-                    vals = {'brand_id': brand_id, 'name': brand_name, 'parent_id': mobiles_cat.id}
-                    # Create brand
-                    new_cat = registry['product.category'].create(cr, SUPERUSER_ID, vals)
-                    categ_to_bind = new_cat.id
-                    _logger.info('New brand created: %s' % new_cat.name)
+        res = self.get_all_data()
+        if res is False:
+            return False
+        mobiles_cat = self.env['product.category'].search([('name', '=', 'Mobiles')], limit=1)
+        all_brands = self.env['product.category'].search([('parent_id', '=', mobiles_cat.id)])
+        all_brands_names = [r.name for r in all_brands]
+        for brand in res.findall('Brand'):
+            brand_id = brand.find('ID').text
+            brand_name_orig = brand.find('Name').text
+            brand_name = make_tech_name(brand.find('Name').text)
+            all_brand_mobiles = [r.mobile_tech_name for r in self.env['product.product'].search([('mobile_brand', '=', brand_name)])]
+            old_brand = self.env['product.category'].search([('name', '=', brand_name)])
+            if brand_name not in all_brands_names:
+                # TEMP
+                vals = {'brand_id': brand_id, 'name': brand_name, 'parent_id': mobiles_cat.id}
+                # Create brand
+                new_cat = self.env['product.category'].create(vals)
+                categ_to_bind = new_cat.id
+                _logger.info('New brand created: %s' % new_cat.name)
+            else:
+                if not old_brand.brand_id or old_brand.brand_id != brand_id:
+                    old_brand.brand_id = brand_id
+                categ_to_bind = old_brand.id
+            for mobile in brand.findall('Mobile'):
+                unlock_mobile_id = mobile.find('ID').text
+                mobile_name = make_tech_name(mobile.find('Name').text)
+                mobile_photo = mobile.find('Photo').text.replace('https', 'http')
+                if mobile_name not in all_brand_mobiles:
+                    resp = urllib.urlopen(mobile_photo)
+                    photo = None
+                    # if resp.code == 200:
+                    #     photo = base64.b64encode(resp.read())
+                    vals = {'unlock_mobile_id': unlock_mobile_id,
+                            'name': brand_name_orig + ' ' + mobile.find('Name').text,
+                            'image': photo,
+                            'categ_id': categ_to_bind,
+                            }
+                    # Create mobile
+                    new_mobile = self.env['product.product'].create(vals)
+                    _logger.info('New mobile created: %s %s' % (brand_name, new_mobile.name))
+                    # Create category for unlock tools for this phone
+                    vals = {'brand_id': brand_id, 'name': mobile_name, 'parent_id': old_brand.id}
+                    unlock_cat = self.env['product.category'].create(vals)
+                    _logger.info('New unlock mobile tools category created: %s' % unlock_cat.name)
                 else:
-                    if not old_brand_obj.brand_id or old_brand_obj.brand_id != brand_id:
-                        old_brand_obj.brand_id = brand_id
-                        categ_to_bind = old_brand_obj.id
-                for mobile in brand.findall('Mobile'):
-                    unlock_mobile_id = mobile.find('ID').text
-                    mobile_name = make_tech_name(mobile.find('Name').text)
-                    mobile_photo = mobile.find('Photo').text.replace('https', 'http')
-                    if mobile_name not in all_brand_mobiles:
-                        resp = urllib.urlopen(mobile_photo)
-                        photo = None
-                        # if resp.code == 200:
-                        #     photo = base64.b64encode(resp.read())
-                        vals = {'unlock_mobile_id': unlock_mobile_id,
-                                'name': mobile_name,
-                                'image': photo,
-                                'categ_id': categ_to_bind,
-                                'sale_ok': False}
-                        # Create mobile
-                        new_mobile = registry['product.product'].create(cr, SUPERUSER_ID, vals)
-                        _logger.info('New mobile created: %s %s' % (brand_name, new_mobile.name))
-                        # Create category for unlock tools for this phone
-                        vals = {'brand_id': brand_id, 'name': mobile_name, 'parent_id': old_brand_obj.id}
-                        unlock_cat = registry['product.category'].create(cr, SUPERUSER_ID, vals)
-                        _logger.info('New unlock mobile tools category created: %s' % unlock_cat.name)
-                        # TEMP
-                        # return True
-                    else:
-                        old_mobile = registry['product.product'].search(cr, SUPERUSER_ID, [('mobile_tech_name', '=', mobile_name)])
-                        if not old_mobile.unlock_mobile_id or old_mobile.unlock_mobile_id != unlock_mobile_id:
-                            old_mobile.unlock_mobile_id = unlock_mobile_id
-                            _logger.info('Old mobile updated: %s' % old_mobile.name)
-                    cr.commit()
-            return True
+                    old_mobile = self.env['product.product'].search([('mobile_tech_name', '=', mobile_name)])
+                    if not old_mobile.unlock_mobile_id or old_mobile.unlock_mobile_id != unlock_mobile_id:
+                        old_mobile.unlock_mobile_id = unlock_mobile_id
+                        _logger.info('Old mobile updated: %s' % old_mobile.name)
+                self.env.cr.commit()
+        return True
 
     @api.model
     def create_tools(self):
         tools_list = self.get_tools()
-        all_mobiles_tools = []
         for group in tools_list.findall('Group'):
             for tool in group.findall('Tool'):
+                tool_mobiles = self.get_tool_mobiles(tool.find('ID').text)
+                mobiles_ids = [int(r.find('ID').text) for r in tool_mobiles.findall('Mobile')]
+                found_mobiles = self.env['product.product'].search([('mobile_id', 'in', mobiles_ids)])
+                if len(found_mobiles) < 1:
+                    continue
                 vals = dict()
-                vals['name'] = tool.find('Name').text
                 vals['group_id'] = group.find('ID').text
                 vals['group_name'] = group.find('Name').text
                 vals['tool_id'] = tool.find('ID').text
@@ -154,16 +170,17 @@ class UnlockBase(models.Model):
                 vals['requires_icloududid'] = tool.find('Requires.ICloudUDID').text
                 vals['requires_type'] = tool.find('Requires.Type').text
                 vals['requires_locks'] = tool.find('Requires.Locks').text
-                tool_mobiles = self.get_tool_mobiles(vals['tool_id'])
-                mobiles_ids = [int(r.find('ID').text) for r in tool_mobiles.findall('Mobile')]
-                vals['product_ids'] = self.env['product.product'].browse(mobiles_ids)
-                old_tool = self.env['unlockbase.tool'].search([('tool_id', '=', vals['tool_id'])])
-                if len(old_tool) == 1:
-                    old_tool.update(vals)
-                    _logger.info('Old unlockbase tool updated: %s' % old_tool.name)
-                elif len(old_tool) == 0:
-                    new_tool = self.env['unlockbase.tool'].create(vals)
-                    _logger.info('New unlockbase tool created: %s' % new_tool.name)
+                vals['product_ids'] = found_mobiles
+                for mob in found_mobiles:
+                    vals['name'] = tool.find('Name').text + ' ' + mob.name
+                    old_tool = self.env['unlockbase.tool'].search([('name', '=', vals['name'])])
+                    if len(old_tool) == 1:
+                        old_tool.update(vals)
+                        _logger.info('Old unlockbase tool updated: %s' % old_tool.name)
+                    elif len(old_tool) == 0:
+                        new_tool = self.env['unlockbase.tool'].create(vals)
+                        _logger.info('New unlockbase tool created: %s' % new_tool.name)
+                self.env.cr.commit()
 
     @api.model
     def create_mobiles_tools(self):
@@ -211,6 +228,7 @@ class UnlockBaseTool(models.Model):
     _name = 'unlockbase.tool'
 
     product_ids = fields.One2many('product.product', 'unlockbase_tool_id')
+    name = fields.Char()
     group_id = fields.Char()
     group_name = fields.Char()
     type = fields.Char()
@@ -237,7 +255,7 @@ class UnlockBaseTool(models.Model):
     requires_icloudphone = fields.Char()
     requires_icloududid = fields.Char()
     requires_type = fields.Char()
-    requires_lock = fields.Char()
+    requires_locks = fields.Char()
 
 
 

@@ -118,7 +118,6 @@ class GsmArena(models.Model):
                 ret[mobile['id']] = mobile
         return ret
 
-
     @api.model
     def get_mobile_id(self, url, mobile):
         # get gsmarena mobile ID that placed in script field
