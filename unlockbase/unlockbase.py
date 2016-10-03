@@ -37,9 +37,7 @@ class ProductCategory(models.Model):
 class UnlockBase(models.Model):
     _name = 'unlockbase'
 
-    api_dict = {'group_id': 'ID',
-                'group_name': 'Name',
-                'tool_id': 'ID',
+    api_dict = {'tool_id': 'ID',
                 'tool_name': 'Name',
                 'credits': 'Credits',
                 'type': 'Type',
@@ -94,6 +92,7 @@ class UnlockBase(models.Model):
             old_brand = self.env['product.category'].search([('name', '=', brand_name)])
             if brand_name not in all_brands_names:
                 # TEMP
+                continue
                 vals = {'brand_id': brand_id, 'name': brand_name, 'parent_id': mobiles_cat.id}
                 # Create brand
                 new_cat = self.env['product.category'].create(vals)
@@ -108,6 +107,8 @@ class UnlockBase(models.Model):
                 mobile_name = make_tech_name(mobile.find('Name').text)
                 mobile_photo = mobile.find('Photo').text.replace('https', 'http')
                 if mobile_name not in all_brand_mobiles:
+                    # TEMP
+                    continue
                     resp = urllib.urlopen(mobile_photo)
                     photo = None
                     # if resp.code == 200:
@@ -142,44 +143,20 @@ class UnlockBase(models.Model):
                 found_mobiles = self.env['product.product'].search([('mobile_id', 'in', mobiles_ids)])
                 if len(found_mobiles) < 1:
                     continue
-                vals = dict()
-                vals['group_id'] = group.find('ID').text
-                vals['group_name'] = group.find('Name').text
-                vals['tool_id'] = tool.find('ID').text
-                vals['tool_name'] = tool.find('Name').text
-                vals['credits'] = tool.find('Credits').text
-                vals['type'] = tool.find('Type').text
-                vals['sms'] = tool.find('SMS').text
-                vals['message'] = tool.find('Message').text
-                vals['delivery_min'] = tool.find('Delivery.Min').text
-                vals['delivery_max'] = tool.find('Delivery.Max').text
-                vals['delivery_unit'] = tool.find('Delivery.Unit').text
-                vals['requires_network'] = tool.find('Requires.Network').text
-                vals['requires_mobile'] = tool.find('Requires.Mobile').text
-                vals['requires_provider'] = tool.find('Requires.Provider').text
-                vals['requires_pin'] = tool.find('Requires.PIN').text
-                vals['requires_kbh'] = tool.find('Requires.KBH').text
-                vals['requires_mep'] = tool.find('Requires.MEP').text
-                vals['requires_prd'] = tool.find('Requires.PRD').text
-                vals['requires_sn'] = tool.find('Requires.SN').text
-                vals['requires_secro'] = tool.find('Requires.SecRO').text
-                vals['requires_reference'] = tool.find('Requires.Reference').text
-                vals['requires_servicetag'] = tool.find('Requires.ServiceTag').text
-                vals['requires_icloudemail'] = tool.find('Requires.ICloudEmail').text
-                vals['requires_icloudphone'] = tool.find('Requires.ICloudPhone').text
-                vals['requires_icloududid'] = tool.find('Requires.ICloudUDID').text
-                vals['requires_type'] = tool.find('Requires.Type').text
-                vals['requires_locks'] = tool.find('Requires.Locks').text
-                vals['product_ids'] = found_mobiles
-                for mob in found_mobiles:
-                    vals['name'] = tool.find('Name').text + ' ' + mob.name
-                    old_tool = self.env['unlockbase.tool'].search([('name', '=', vals['name'])])
-                    if len(old_tool) == 1:
-                        old_tool.update(vals)
-                        _logger.info('Old unlockbase tool updated: %s' % old_tool.name)
-                    elif len(old_tool) == 0:
-                        new_tool = self.env['unlockbase.tool'].create(vals)
-                        _logger.info('New unlockbase tool created: %s' % new_tool.name)
+                vals = {'group_id': group.find('ID'), 'group_name': group.find('Name'), 'product_ids': found_mobiles}
+                for key, val in self.api_dict.iteritems():
+                    try:
+                        vals[key] = tool.find(val)
+                    except:
+                        pass
+                vals['name'] = tool.find('Name').text
+                old_tool = self.env['unlockbase.tool'].search([('name', '=', vals['name'])])
+                if len(old_tool) == 1:
+                    old_tool.update(vals)
+                    _logger.info('Old unlockbase tool updated: %s' % old_tool.name)
+                elif len(old_tool) == 0:
+                    new_tool = self.env['unlockbase.tool'].create(vals)
+                    _logger.info('New unlockbase tool created: %s' % new_tool.name)
                 self.env.cr.commit()
 
     @api.model

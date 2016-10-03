@@ -14,8 +14,8 @@ _logger = logging.getLogger("# " + __name__)
 _logger.setLevel(logging.DEBUG)
 
 gsmarena_url = 'http://www.gsmarena.com/results.php3'  # TODO place in ir config parameter
-# brands = ['nokia']  # TODO load brands from somewhere
-brands = ['Nokia', 'Apple', 'Acer', 'Huawei']  # TODO load brands from somewhere
+brands = ['Nokia']  # TODO load brands from somewhere
+# brands = ['Nokia', 'Apple', 'Acer', 'Huawei']  # TODO load brands from somewhere
 
 
 class ProductProduct(models.Model):
