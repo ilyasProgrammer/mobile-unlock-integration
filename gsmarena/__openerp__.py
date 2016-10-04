@@ -22,6 +22,7 @@
         "data/ir_action_server.xml",
         "data/product_category.xml",
         "data/cron.xml",
+        "data/ir_config_parameter.xml",
     ],
     "qweb": [
     ],

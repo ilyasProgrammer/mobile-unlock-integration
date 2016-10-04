@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data  noupdate="1">
+    <record model="ir.config_parameter" id="unlockbase_url">
+        <field name="key">unlockbase.url</field>
+        <field name="value">http://www.unlockbase.com/xml/api/v3</field>
+    </record>
+</data>
+<data  noupdate="1">
+    <record model="ir.config_parameter" id="unlockbase_key">
+        <field name="key">unlockbase.key</field>
+        <field name="value">(C8C7-4533-06AE-3151)</field>
+    </record>
+</data>
+</openerp>

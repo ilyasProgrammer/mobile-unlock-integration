@@ -13,9 +13,8 @@ import string
 _logger = logging.getLogger("# " + __name__)
 _logger.setLevel(logging.DEBUG)
 
-gsmarena_url = 'http://www.gsmarena.com/results.php3'  # TODO place in ir config parameter
 brands = ['Nokia']  # TODO load brands from somewhere
-# brands = ['Nokia', 'Apple', 'Acer', 'Huawei']  # TODO load brands from somewhere
+# brands = ['Nokia', 'Apple', 'Acer', 'Huawei']
 
 
 class ProductProduct(models.Model):
@@ -34,21 +33,21 @@ class GsmArena(models.Model):
     @api.model
     def action_load_from_gsmarena(self):
         _logger.info('Loading of gsmarena.com mobiles database started')
-        res = self.check_brands()
-        if res == 0:
-            _logger.error("Please check brands parser errors")
-        res = self.check_mobiles()
-        if res == 0:
-            _logger.error("Please check mobiles parser errors")
+        all_good = True
+        while all_good:
+            all_good = self.check_brands()
+            all_good = self.check_mobiles()
+            return
+        _logger.error("Please check gsmarena mobiles parser errors")
 
     @api.model
     def check_mobiles(self):
         mobiles_dict = self.get_gsmarena_mobiles()
-        if mobiles_dict == 0:
-            return 0
+        if mobiles_dict is False:
+            return False
         for key, value in mobiles_dict.iteritems():
-            found = self.env['product.product'].search([('mobile_id', '=', key)])
-            if len(found) == 0:
+            found_mobiles = self.env['product.product'].search([('mobile_id', '=', key)])
+            if len(found_mobiles) == 0:
                 # create new
                 categ = self.env['product.category'].search([('name', '=', value['brand'])])
                 if len(categ) != 1:
@@ -64,10 +63,10 @@ class GsmArena(models.Model):
                         'categ_id': categ.id}
                 new_mobile = self.env['product.product'].create(vals)
                 _logger.info('New mobile added: %s' % new_mobile.name)
-            elif len(found) == 1:
-                # TODO check accordance of fields
-                pass
-        return 1
+            elif len(found_mobiles) == 1:
+                found_mobiles.update(vals)
+                _logger.info('Old mobile updated: %s' % found_mobiles.name)
+        return True
 
     @api.model
     def check_brands(self):
@@ -82,11 +81,13 @@ class GsmArena(models.Model):
             else:
                 # TODO check accordance
                 pass
-        return 1
+        return True
 
     @api.model
     def get_gsmarena_mobiles(self):
-        ret = {}  # {mobile_id:{'name':'', 'photo': ''}}
+        # returns  dict of dict {mobile_id:{'name':'', 'photo': '', ... }}
+        gsmarena_url = self.env['ir.config_parameter'].sudo().get_param('gsmarena.url')
+        ret = dict()
         simbol = ["&", "+"]
         kata = ["_and_", "_plus_"]
         values = {'sQuickSearch': 'yes'}
@@ -96,11 +97,11 @@ class GsmArena(models.Model):
             soup = bs(page, 'html.parser')
             makers = soup.find_all('div', 'makers')
             if len(makers) != 1:
-                print 'Error'  # TODO
-                return
+                print 'Error get_gsmarena_mobiles'  # TODO
+                return False
             mobiles = makers[0].find_all('li')
             for r in mobiles:
-                mobile = {}
+                mobile = dict()
                 mobile['name'] = brand + ' ' + r.find('br').text
                 mobile['mobile_tech_name'] = make_tech_name(r.find('br').text)
                 mobile['brand'] = make_tech_name(brand)
@@ -111,15 +112,16 @@ class GsmArena(models.Model):
                 if resp.code == 200:
                     photo = base64.b64encode(resp.read())
                 mobile['photo'] = photo
-                mob_id = self.get_mobile_id('http://www.gsmarena.com/' + r.find('a').attrs['href'], mobile)
-                if mob_id == 0:
-                    return 0
+                mob_id = self.get_mobile_id('http://www.gsmarena.com/' + r.find('a').attrs['href'])
+                if mob_id is False:
+                    print 'Cant parse mobile id in get_gsmarena_mobiles'  # TODO
+                    return False
                 mobile['id'] = mob_id
                 ret[mobile['id']] = mobile
         return ret
 
     @api.model
-    def get_mobile_id(self, url, mobile):
+    def get_mobile_id(self, url):
         # get gsmarena mobile ID that placed in script field
         page = get_http_page(url)
         soup = bs(page, 'html.parser')
@@ -134,7 +136,7 @@ class GsmArena(models.Model):
                             break
         except:
             _logger.error("Mobile ID parsing error !")
-            return 0
+            return False
         return int(mobile_id)
 
 

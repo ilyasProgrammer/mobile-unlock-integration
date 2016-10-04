@@ -1,24 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from openerp import api, fields, models
-import threading
 import openerp
 import logging
 import urllib
 import urllib2
 import xml.etree.ElementTree
-import base64
 import re
 import string
-from bs4 import BeautifulSoup as bs
-from openerp import SUPERUSER_ID
 
 
 _logger = logging.getLogger("# " + __name__)
 _logger.setLevel(logging.DEBUG)
-
-unlockbase_url = 'http://www.unlockbase.com/xml/api/v3'  # TODO place in ir config parameter
-unlockbase_key = '(C8C7-4533-06AE-3151)'  # TODO place in ir config parameter
 
 
 class ProductProduct(models.Model):
@@ -69,8 +62,8 @@ class UnlockBase(models.Model):
         _logger.info('Loading of unlockbase.com mobiles database started')
         all_good = True
         while all_good:
-            # all_good = self.create_brands_and_mobiles()  # create, brand, mobile and mobile tools category
-            # all_good = self.create_tools()   # create tools with bound mobiles to it
+            all_good = self.create_brands_and_mobiles()  # create, brand, mobile and mobile tools category
+            all_good = self.create_tools()   # create tools with bound mobiles to it
             all_good = self.create_mobiles_tools()  # for each mobile we create available unlock tools
             _logger.info('Data from unlockbase.com loaded successfully')
             return
@@ -91,7 +84,7 @@ class UnlockBase(models.Model):
             all_brand_mobiles = [r.mobile_tech_name for r in self.env['product.product'].search([('mobile_brand', '=', brand_name)])]
             old_brand = self.env['product.category'].search([('name', '=', brand_name)])
             if brand_name not in all_brands_names:
-                # TEMP
+                # TODO TEMP
                 continue
                 vals = {'brand_id': brand_id, 'name': brand_name, 'parent_id': mobiles_cat.id}
                 # Create brand
@@ -107,12 +100,12 @@ class UnlockBase(models.Model):
                 mobile_name = make_tech_name(mobile.find('Name').text)
                 mobile_photo = mobile.find('Photo').text.replace('https', 'http')
                 if mobile_name not in all_brand_mobiles:
-                    # TEMP
+                    # TODO TEMP
                     continue
                     resp = urllib.urlopen(mobile_photo)
                     photo = None
-                    # if resp.code == 200:
-                    #     photo = base64.b64encode(resp.read())
+                    if resp.code == 200:
+                        photo = base64.b64encode(resp.read())
                     vals = {'unlock_mobile_id': unlock_mobile_id,
                             'name': brand_name_orig + ' ' + mobile.find('Name').text,
                             'image': photo,
@@ -179,6 +172,7 @@ class UnlockBase(models.Model):
                 vals = {'name': mobile.name + ' ' + tool.name,
                         'unlockbase_tool_ids': [(4, tool.id,)],
                         'type': 'service',
+                        'list_price': tool.credits,
                         'image': open(image_path, 'rb').read().encode('base64'),
                         'categ_id': mobile_tools_cat.id}
                 if len(found_tools) == 0:
@@ -189,17 +183,7 @@ class UnlockBase(models.Model):
                     found_tools.update(vals)
                     _logger.info('Old unlockbase tool product updated: %s' % found_tools.name)
 
-    def send_action(self, values):
-        values['Key'] = unlockbase_key
-        data = urllib.urlencode(values)
-        req = urllib2.Request(unlockbase_url, data)
-        response = urllib2.urlopen(req)
-        the_page = response.read()
-        if 'Unauthorized IP address' in the_page:
-            _logger.error('Unauthorized IP address ERROR. Please check security configuration in unlockbase.com settings.')
-            return False
-        res = xml.etree.ElementTree.fromstring(the_page)
-        return res
+    """ unlockbase.com API v3 representation """
 
     def get_all_data(self):
         values = {'Action': 'GetMobiles'}
@@ -214,6 +198,19 @@ class UnlockBase(models.Model):
     def get_tool_mobiles(self, tool_id):
         values = {'Action': 'GetToolMobiles', 'ID': tool_id}
         res = self.send_action(values)
+        return res
+
+    def send_action(self, values):
+        unlockbase_url = self.env['ir.config_parameter'].sudo().get_param('unlockbase.url')
+        values['Key'] = self.env['ir.config_parameter'].sudo().get_param('unlockbase.key')
+        data = urllib.urlencode(values)
+        req = urllib2.Request(unlockbase_url, data)
+        response = urllib2.urlopen(req)
+        the_page = response.read()
+        if 'Unauthorized IP address' in the_page:
+            _logger.error('Unauthorized IP address ERROR. Please check security configuration in unlockbase.com settings.')
+            return False
+        res = xml.etree.ElementTree.fromstring(the_page)
         return res
 
 
