@@ -21,7 +21,7 @@ brands = ['Nokia']  # TODO load brands from somewhere
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
-    mobile_id = fields.Char(string='Mobile id')
+    mobile_id = fields.Char(string='Mobile id')  # gsmarena mobile id
     mobile_brand = fields.Char(string='Mobile brand')
     mobile_title = fields.Char(string='Mobile title')
     mobile_slug = fields.Char(string='Mobile slug')

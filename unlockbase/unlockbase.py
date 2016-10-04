@@ -25,7 +25,7 @@ class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     unlock_mobile_id = fields.Char(string='unlock_mobile_id')
-    unlockbase_tool_id = fields.Many2many('unlockbase.tool')
+    unlockbase_tool_ids = fields.Many2many('unlockbase.tool', 'unlock_tool_product_rel', 'product_id', 'unlockbase_tool_id')
 
 
 class ProductCategory(models.Model):
@@ -37,7 +37,7 @@ class ProductCategory(models.Model):
 class UnlockBase(models.Model):
     _name = 'unlockbase'
 
-    api_dict = {'tool_id': 'ID',
+    unlock_tool_dict = {'tool_id': 'ID',
                 'tool_name': 'Name',
                 'credits': 'Credits',
                 'type': 'Type',
@@ -70,8 +70,8 @@ class UnlockBase(models.Model):
         all_good = True
         while all_good:
             # all_good = self.create_brands_and_mobiles()  # create, brand, mobile and mobile tools category
-            all_good = self.create_tools()   # create tools with bound mobiles to it
-            # all_good = self.create_mobiles_tools()  # for each mobile we create available unlock tools
+            # all_good = self.create_tools()   # create tools with bound mobiles to it
+            all_good = self.create_mobiles_tools()  # for each mobile we create available unlock tools
             _logger.info('Data from unlockbase.com loaded successfully')
             return
         _logger.info('Errors occurred while unlockbase.com data loading')
@@ -121,15 +121,22 @@ class UnlockBase(models.Model):
                     # Create mobile
                     new_mobile = self.env['product.product'].create(vals)
                     _logger.info('New mobile created: %s %s' % (brand_name, new_mobile.name))
-                    # Create category for unlock tools for this phone
-                    vals = {'brand_id': brand_id, 'name': mobile_name, 'parent_id': old_brand.id}
-                    unlock_cat = self.env['product.category'].create(vals)
-                    _logger.info('New unlock mobile tools category created: %s' % unlock_cat.name)
                 else:
                     old_mobile = self.env['product.product'].search([('mobile_tech_name', '=', mobile_name)])
                     if not old_mobile.unlock_mobile_id or old_mobile.unlock_mobile_id != unlock_mobile_id:
                         old_mobile.unlock_mobile_id = unlock_mobile_id
                         _logger.info('Old mobile updated: %s' % old_mobile.name)
+                # Create category for unlock tools for this phone
+                old_mobile_cat = self.env['product.category'].search([('name', '=', brand_name_orig + ' ' + mobile.find('Name').text)])
+                vals = {'brand_id': brand_id,
+                        'name': brand_name_orig + ' ' + mobile.find('Name').text,
+                        'parent_id': old_brand.id}
+                if len(old_mobile_cat) == 1:
+                    old_mobile_cat.update(vals)
+                    _logger.info('Old unlock mobile tools category updated: %s' % unlock_cat.name)
+                elif len(old_mobile_cat) == 0:
+                    unlock_cat = self.env['product.category'].create(vals)
+                    _logger.info('New unlock mobile tools category created: %s' % unlock_cat.name)
                 self.env.cr.commit()
         return True
 
@@ -140,13 +147,15 @@ class UnlockBase(models.Model):
             for tool in group.findall('Tool'):
                 tool_mobiles = self.get_tool_mobiles(tool.find('ID').text)
                 mobiles_ids = [int(r.find('ID').text) for r in tool_mobiles.findall('Mobile')]
-                found_mobiles = self.env['product.product'].search([('mobile_id', 'in', mobiles_ids)])
+                found_mobiles = self.env['product.product'].search([('unlock_mobile_id', 'in', mobiles_ids)])
                 if len(found_mobiles) < 1:
                     continue
-                vals = {'group_id': group.find('ID'), 'group_name': group.find('Name'), 'product_ids': found_mobiles}
-                for key, val in self.api_dict.iteritems():
+                vals = {'group_id': group.find('ID').text,  # must have
+                        'group_name': group.find('Name').text,  # must have
+                        'product_ids': [(6, 0, found_mobiles.ids or [])]}
+                for key, val in self.unlock_tool_dict.iteritems():
                     try:
-                        vals[key] = tool.find(val)
+                        vals[key] = tool.find(val).text  # some might absent
                     except:
                         pass
                 vals['name'] = tool.find('Name').text
@@ -161,17 +170,24 @@ class UnlockBase(models.Model):
 
     @api.model
     def create_mobiles_tools(self):
-        tools = self.env['unlockbase.tool'].browse()
-        for tool in tools:
-            for mobile_id in tool.product_ids:
-                mobile_tools_cat = self.env['product.product'].search([('name', '=', mobile_id.mobile_tech_name)])
-                found_tools = self.env['product.product'].search([('unlockbase_tool_id', '=', tool.id), ('categ_id', '=', mobile_tools_cat.id)])
+        image_path = openerp.modules.get_module_resource('unlockbase', 'static/src/img', 'lock.png')
+        mobiles = self.env['product.product'].search([('unlock_mobile_id', '!=', '')])
+        for mobile in mobiles:
+            mobile_tools_cat = self.env['product.category'].search([('name', '=', mobile.name)])
+            for tool in mobile.unlockbase_tool_ids:
+                found_tools = self.env['product.product'].search([('unlockbase_tool_ids', 'in', tool.id), ('categ_id', '=', mobile_tools_cat.id)])
+                vals = {'name': mobile.name + ' ' + tool.name,
+                        'unlockbase_tool_ids': [(4, tool.id,)],
+                        'type': 'service',
+                        'image': open(image_path, 'rb').read().encode('base64'),
+                        'categ_id': mobile_tools_cat.id}
                 if len(found_tools) == 0:
-                    vals = {'name': tool.name, 'unlockbase_tool_id': tool.id, 'categ_id': mobile_tools_cat.id}
                     new_tool_product = self.env['product.product'].create(vals)
-                    _logger.info('New tool product created: %s' % new_tool_product.name)
+                    _logger.info('New unlockbase tool product created: %s' % new_tool_product.name)
                 elif len(found_tools) == 1:
+                    continue  # TODO option to update old
                     found_tools.update(vals)
+                    _logger.info('Old unlockbase tool product updated: %s' % found_tools.name)
 
     def send_action(self, values):
         values['Key'] = unlockbase_key
@@ -204,7 +220,7 @@ class UnlockBase(models.Model):
 class UnlockBaseTool(models.Model):
     _name = 'unlockbase.tool'
 
-    product_ids = fields.One2many('product.product', 'unlockbase_tool_id')
+    product_ids = fields.Many2many('product.product', 'unlock_tool_product_rel', 'unlockbase_tool_id', 'product_id')
     name = fields.Char()
     group_id = fields.Char()
     group_name = fields.Char()
@@ -233,7 +249,6 @@ class UnlockBaseTool(models.Model):
     requires_icloududid = fields.Char()
     requires_type = fields.Char()
     requires_locks = fields.Char()
-
 
 
 def make_tech_name(name):
