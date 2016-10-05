@@ -22,6 +22,7 @@
     "external_dependencies": {'python': ['bs4']},
     "data": [
         "data/pos_categories.xml",
+        "views.xml",
     ],
     "qweb": [
     ],

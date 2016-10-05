@@ -169,8 +169,9 @@ class UnlockBase(models.Model):
         for mobile in mobiles:
             mobile_tools_cat = self.env['product.category'].search([('name', '=', mobile.name)])
             for tool in mobile.unlockbase_tool_ids:
-                found_tools = self.env['product.product'].search([('unlockbase_tool_ids', 'in', tool.id), ('categ_id', '=', mobile_tools_cat.id)])
-                vals = {'name': mobile.name + ' ' + tool.name,
+                mt_name = mobile.name + '\nTool: \n' + tool.name
+                found_tools = self.env['product.product'].search([('name', '=', mt_name), ('categ_id', '=', mobile_tools_cat.id)])
+                vals = {'name': mt_name,
                         'unlockbase_tool_ids': [(4, tool.id,)],
                         'type': 'service',
                         'unlock_service': True,
@@ -181,9 +182,9 @@ class UnlockBase(models.Model):
                     new_tool_product = self.env['product.product'].create(vals)
                     _logger.info('New unlockbase tool product created: %s' % new_tool_product.name)
                 elif len(found_tools) == 1:
-                    continue  # TODO option to update old
                     found_tools.update(vals)
                     _logger.info('Old unlockbase tool product updated: %s' % found_tools.name)
+                self.env.cr.commit()
 
     """ unlockbase.com API v3 representation """
 
