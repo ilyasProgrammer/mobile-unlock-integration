@@ -7,22 +7,26 @@
         <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"></field>
         <field name="arch" type="xml">
             <xpath expr="//notebook/page[last()]" position="after">
-                <field name="unlockbase_network"/>
-                <field name="unlockbase_mobile"/>
-                <field name="unlockbase_provider"/>
-                <field name="unlockbase_pin"/>
-                <field name="unlockbase_kbh"/>
-                <field name="unlockbase_mep"/>
-                <field name="unlockbase_prd"/>
-                <field name="unlockbase_sn"/>
-                <field name="unlockbase_secro"/>
-                <field name="unlockbase_reference"/>
-                <field name="unlockbase_servicetag"/>
-                <field name="unlockbase_icloudemail"/>
-                <field name="unlockbase_icloudphone"/>
-                <field name="unlockbase_icloududid"/>
-                <field name="unlockbase_type"/>
-                <field name="unlockbase_locks"/>
+                <page id="unlockbase_mobile_data" string="Unlock">
+                    <group string="Mobile unlock data">
+                        <field name="unlockbase_network"/>
+                        <field name="unlockbase_mobile"/>
+                        <field name="unlockbase_provider"/>
+                        <field name="unlockbase_pin"/>
+                        <field name="unlockbase_kbh"/>
+                        <field name="unlockbase_mep"/>
+                        <field name="unlockbase_prd"/>
+                        <field name="unlockbase_sn"/>
+                        <field name="unlockbase_secro"/>
+                        <field name="unlockbase_reference"/>
+                        <field name="unlockbase_servicetag"/>
+                        <field name="unlockbase_icloudemail"/>
+                        <field name="unlockbase_icloudphone"/>
+                        <field name="unlockbase_icloududid"/>
+                        <field name="unlockbase_type"/>
+                        <field name="unlockbase_locks"/>
+                    </group>
+                </page>
             </xpath>
         </field>
     </record>
