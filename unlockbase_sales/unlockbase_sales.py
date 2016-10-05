@@ -55,6 +55,7 @@ class UnlockBase(models.Model):
 class PosOrder(models.Model):
     _inherit = 'pos.order'
 
+    unlockbase_order_id = fields.Char(string='Unlock order id', default='None', readonly=True)
     unlockbase_order_state = fields.Selection([('draft', 'Draft'), ('placed', 'Placed'), ('validated', 'Validated')], string='Unlock state',  default='draft', readonly=True)
     IMEI = fields.Char(string='IMEI', default='None', required=True)
     email = fields.Char(string='email', default='None', required=True)
@@ -130,12 +131,33 @@ class PosOrder(models.Model):
         unlock_tool = order.lines[0].product_id.unlockbase_tool_ids[0]
         vals = {'IMEI': order.IMEI, 'Email': order.email}
         if unlock_tool.requires_network != 'None':
-            if order.unlockbase_network in ['', 'None', None, False]:
+            if lame(order.unlockbase_network):
                 raise UserError(_('Please set unlock network.'))
-                return
             else:
                 vals['Network'] = order.unlockbase_network
-        if unlock_tool.requires_mobile != 'None' and order.unlockbase_mobile in ['', 'None', None, False]:
-            raise UserError(_('Please set unlock network.'))
-            return
-        self.unlockbase_place_order(vals)
+        if unlock_tool.requires_mobile != 'None':
+            if lame(order.unlockbase_mobile):
+                raise UserError(_('Please set unlock mobile id.'))
+            else:
+                vals['Mobile'] = order.unlockbase_network
+        # TODO other fields
+        res = self.unlockbase_place_order(vals)
+        try:
+            suc = res.find('Success').text
+            _logger.info(suc)
+            order.unlockbase_order_id = res.find('ID').text
+        except:
+            raise UserError(_('Bad order'))  # TODO
+        order.unlockbase_order_state = 'placed'
+
+
+def nice(s):
+    if s in ['', 'None', None, False]:
+        return False
+    return True
+
+
+def lame(s):
+    if s in ['', 'None', None, False]:
+        return True
+    return False
