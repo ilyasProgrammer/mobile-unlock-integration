@@ -55,7 +55,7 @@ class PosOrder(models.Model):
     _inherit = 'pos.order'
 
     unlockbase_order_state = fields.Selection([('draft', 'Draft'), ('placed', 'Placed'), ('validated', 'Validated')])
-    unlockbase_network = fields.Char(string='network', default='AT&T')
+    unlockbase_network = fields.Char(string='network', default='AT')
     unlockbase_mobile = fields.Char(string='mobile')
     unlockbase_provider = fields.Char(string='provider')
     unlockbase_pin = fields.Char(string='pin')
@@ -71,6 +71,30 @@ class PosOrder(models.Model):
     unlockbase_icloududid = fields.Char(string='icloududid')
     unlockbase_type = fields.Char(string='type')
     unlockbase_locks = fields.Char(string='locks')
+
+    @api.model
+    def create_from_ui(self, context):
+        res = super(PosOrder, self).create_from_ui(context)
+        for order_id in res:
+            order = self.env['pos.order'].browse(order_id)
+            unlock_tool = order.lines[0].product_id.unlockbase_tool_ids[0]
+            order.unlockbase_network = unlock_tool.requires_network
+            order.unlockbase_mobile = unlock_tool.requires_mobile
+            order.unlockbase_provider = unlock_tool.requires_provider
+            order.unlockbase_pin = unlock_tool.requires_pin
+            order.unlockbase_kbh = unlock_tool.requires_kbh
+            order.unlockbase_mep = unlock_tool.requires_mep
+            order.unlockbase_prd = unlock_tool.requires_prd
+            order.unlockbase_sn = unlock_tool.requires_sn
+            order.unlockbase_secro = unlock_tool.requires_secro
+            order.unlockbase_reference = unlock_tool.requires_reference
+            order.unlockbase_servicetag = unlock_tool.requires_servicetag
+            order.unlockbase_icloudemail = unlock_tool.requires_icloudemail
+            order.unlockbase_icloudphone = unlock_tool.requires_icloudphone
+            order.unlockbase_icloududid = unlock_tool.requires_icloududid
+            order.unlockbase_type = unlock_tool.requires_type
+            order.unlockbase_locks = unlock_tool.requires_locks
+        return res
 
     def unlockbase_place_order(self):
         return self.unlockbase_send_action({'Action': 'PlaceOrder'})
