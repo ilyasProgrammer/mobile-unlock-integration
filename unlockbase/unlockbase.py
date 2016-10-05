@@ -233,6 +233,7 @@ class UnlockBaseTool(models.Model):
     delivery_min = fields.Char()
     delivery_max = fields.Char()
     delivery_unit = fields.Char()
+    IMEI = fields.Char()
     requires_network = fields.Char()
     requires_mobile = fields.Char()
     requires_provider = fields.Char()

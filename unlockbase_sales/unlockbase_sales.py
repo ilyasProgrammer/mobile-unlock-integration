@@ -5,7 +5,8 @@ import logging
 import urllib
 import urllib2
 import xml.etree.ElementTree
-
+from openerp.exceptions import UserError
+from openerp.tools.translate import _
 
 _logger = logging.getLogger("# " + __name__)
 _logger.setLevel(logging.DEBUG)
@@ -54,47 +55,53 @@ class UnlockBase(models.Model):
 class PosOrder(models.Model):
     _inherit = 'pos.order'
 
-    unlockbase_order_state = fields.Selection([('draft', 'Draft'), ('placed', 'Placed'), ('validated', 'Validated')])
-    unlockbase_network = fields.Char(string='network', default='AT')
-    unlockbase_mobile = fields.Char(string='mobile')
-    unlockbase_provider = fields.Char(string='provider')
-    unlockbase_pin = fields.Char(string='pin')
-    unlockbase_kbh = fields.Char(string='kbh')
-    unlockbase_mep = fields.Char(string='mep')
-    unlockbase_prd = fields.Char(string='prd')
-    unlockbase_sn = fields.Char(string='sn')
-    unlockbase_secro = fields.Char(string='secro')
-    unlockbase_reference = fields.Char(string='reference')
-    unlockbase_servicetag = fields.Char(string='servicetag')
-    unlockbase_icloudemail = fields.Char(string='icloudemail')
-    unlockbase_icloudphone = fields.Char(string='icloudphone')
-    unlockbase_icloududid = fields.Char(string='icloududid')
-    unlockbase_type = fields.Char(string='type')
-    unlockbase_locks = fields.Char(string='locks')
+    unlockbase_order_state = fields.Selection([('draft', 'Draft'), ('placed', 'Placed'), ('validated', 'Validated')], string='Unlock state',  default='draft', readonly=True)
+    IMEI = fields.Char(string='IMEI', default='None', required=True)
+    email = fields.Char(string='email', default='None', required=True)
+    unlockbase_network = fields.Char(string='network', default='None')
+    unlockbase_mobile = fields.Char(string='mobile', default='None')
+    unlockbase_provider = fields.Char(string='provider', default='None')
+    unlockbase_pin = fields.Char(string='pin', default='None')
+    unlockbase_kbh = fields.Char(string='kbh', default='None')
+    unlockbase_mep = fields.Char(string='mep', default='None')
+    unlockbase_prd = fields.Char(string='prd', default='None')
+    unlockbase_sn = fields.Char(string='sn', default='None')
+    unlockbase_secro = fields.Char(string='secro', default='None')
+    unlockbase_reference = fields.Char(string='reference', default='None')
+    unlockbase_servicetag = fields.Char(string='servicetag', default='None')
+    unlockbase_icloudemail = fields.Char(string='icloudemail', default='None')
+    unlockbase_icloudphone = fields.Char(string='icloudphone', default='None')
+    unlockbase_icloududid = fields.Char(string='icloududid', default='None')
+    unlockbase_type = fields.Char(string='type', default='None')
+    unlockbase_locks = fields.Char(string='locks', default='None')
 
     @api.model
     def create_from_ui(self, context):
         res = super(PosOrder, self).create_from_ui(context)
         for order_id in res:
-            order = self.env['pos.order'].browse(order_id)
-            unlock_tool = order.lines[0].product_id.unlockbase_tool_ids[0]
-            order.unlockbase_network = unlock_tool.requires_network
-            order.unlockbase_mobile = unlock_tool.requires_mobile
-            order.unlockbase_provider = unlock_tool.requires_provider
-            order.unlockbase_pin = unlock_tool.requires_pin
-            order.unlockbase_kbh = unlock_tool.requires_kbh
-            order.unlockbase_mep = unlock_tool.requires_mep
-            order.unlockbase_prd = unlock_tool.requires_prd
-            order.unlockbase_sn = unlock_tool.requires_sn
-            order.unlockbase_secro = unlock_tool.requires_secro
-            order.unlockbase_reference = unlock_tool.requires_reference
-            order.unlockbase_servicetag = unlock_tool.requires_servicetag
-            order.unlockbase_icloudemail = unlock_tool.requires_icloudemail
-            order.unlockbase_icloudphone = unlock_tool.requires_icloudphone
-            order.unlockbase_icloududid = unlock_tool.requires_icloududid
-            order.unlockbase_type = unlock_tool.requires_type
-            order.unlockbase_locks = unlock_tool.requires_locks
+            self.set_fields(order_id)
         return res
+
+    @api.model
+    def set_fields(self, order_id):
+        order = self.env['pos.order'].browse(order_id)
+        unlock_tool = order.lines[0].product_id.unlockbase_tool_ids[0]
+        order.unlockbase_network = unlock_tool.requires_network
+        order.unlockbase_mobile = unlock_tool.requires_mobile
+        order.unlockbase_provider = unlock_tool.requires_provider
+        order.unlockbase_pin = unlock_tool.requires_pin
+        order.unlockbase_kbh = unlock_tool.requires_kbh
+        order.unlockbase_mep = unlock_tool.requires_mep
+        order.unlockbase_prd = unlock_tool.requires_prd
+        order.unlockbase_sn = unlock_tool.requires_sn
+        order.unlockbase_secro = unlock_tool.requires_secro
+        order.unlockbase_reference = unlock_tool.requires_reference
+        order.unlockbase_servicetag = unlock_tool.requires_servicetag
+        order.unlockbase_icloudemail = unlock_tool.requires_icloudemail
+        order.unlockbase_icloudphone = unlock_tool.requires_icloudphone
+        order.unlockbase_icloududid = unlock_tool.requires_icloududid
+        order.unlockbase_type = unlock_tool.requires_type
+        order.unlockbase_locks = unlock_tool.requires_locks
 
     def unlockbase_place_order(self):
         return self.unlockbase_send_action({'Action': 'PlaceOrder'})
@@ -116,3 +123,19 @@ class PosOrder(models.Model):
             return False
         res = xml.etree.ElementTree.fromstring(the_page)
         return res
+
+    @api.model
+    def action_place_order(self, ids):
+        order = self.env['pos.order'].browse(ids)
+        unlock_tool = order.lines[0].product_id.unlockbase_tool_ids[0]
+        vals = {'IMEI': order.IMEI, 'Email': order.email}
+        if unlock_tool.requires_network != 'None':
+            if order.unlockbase_network in ['', 'None', None, False]:
+                raise UserError(_('Please set unlock network.'))
+                return
+            else:
+                vals['Network'] = order.unlockbase_network
+        if unlock_tool.requires_mobile != 'None' and order.unlockbase_mobile in ['', 'None', None, False]:
+            raise UserError(_('Please set unlock network.'))
+            return
+        self.unlockbase_place_order(vals)

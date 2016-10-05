@@ -6,9 +6,17 @@
         <field name="model">pos.order</field>
         <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"></field>
         <field name="arch" type="xml">
+            <xpath expr="//group/field[@name='fiscal_position_id']" position="after">
+                <field name="unlockbase_order_state"/>
+            </xpath>
+            <xpath expr="//header/field[@name='state']" position="before">
+                <button name="action_place_order" string="Place unlock order" class="oe_highlight" type="object" context="{'pos_session_id' : session_id}"/>
+            </xpath>
             <xpath expr="//notebook/page[last()]" position="after">
                 <page id="unlockbase_mobile_data" string="Unlock">
                     <group string="Mobile unlock data">
+                        <field name="IMEI"/>
+                        <field name="email"/>
                         <field name="unlockbase_network" attrs="{'invisible': [('unlockbase_network', 'in', ['', None, 'None'])]}"/>
                         <field name="unlockbase_mobile" attrs="{'invisible': [('unlockbase_mobile', 'in', ['', None, 'None'])]}"/>
                         <field name="unlockbase_provider" attrs="{'invisible': [('unlockbase_provider', 'in', ['', None, 'None'])]}"/>
