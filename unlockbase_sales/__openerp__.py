@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
-    "name": """unlockbase phone sales""",
-    "summary": """unlockbase phone sales""",
+    "name": """unlockbase service sales""",
+    "summary": """unlockbase service sales""",
     "description": """Sales of unlock service""",
     "category": "Web",
     "images": [],
@@ -21,17 +21,16 @@
     ],
     "external_dependencies": {'python': ['bs4']},
     "data": [
-        "data/ir_action_server.xml"
+        "data/pos_categories.xml",
     ],
     "qweb": [
     ],
     "demo": [
     ],
 
-    'post_load' : '',
+    'post_load': '',
     "pre_init_hook": None,
-    "post_init_hook": None,
+    "post_init_hook": '_set_pos_category',
     "installable": True,
     "auto_install": False,
-
 }

@@ -21,6 +21,7 @@
     "external_dependencies": {'python': ['bs4']},
     "data": [
         "data/cron.xml",
+        "data/ir_config_parameter.xml",
     ],
     "qweb": [
     ],

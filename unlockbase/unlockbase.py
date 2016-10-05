@@ -19,6 +19,7 @@ class ProductProduct(models.Model):
 
     unlock_mobile_id = fields.Char(string='unlock_mobile_id')
     unlockbase_tool_ids = fields.Many2many('unlockbase.tool', 'unlock_tool_product_rel', 'product_id', 'unlockbase_tool_id')
+    unlock_service = fields.Boolean(default=False, help='if this product unlock service or not')
 
 
 class ProductCategory(models.Model):
@@ -126,7 +127,7 @@ class UnlockBase(models.Model):
                         'parent_id': old_brand.id}
                 if len(old_mobile_cat) == 1:
                     old_mobile_cat.update(vals)
-                    _logger.info('Old unlock mobile tools category updated: %s' % unlock_cat.name)
+                    _logger.info('Old unlock mobile tools category updated: %s' % old_mobile_cat.name)
                 elif len(old_mobile_cat) == 0:
                     unlock_cat = self.env['product.category'].create(vals)
                     _logger.info('New unlock mobile tools category created: %s' % unlock_cat.name)
@@ -172,6 +173,7 @@ class UnlockBase(models.Model):
                 vals = {'name': mobile.name + ' ' + tool.name,
                         'unlockbase_tool_ids': [(4, tool.id,)],
                         'type': 'service',
+                        'unlock_service': True,
                         'list_price': tool.credits,
                         'image': open(image_path, 'rb').read().encode('base64'),
                         'categ_id': mobile_tools_cat.id}

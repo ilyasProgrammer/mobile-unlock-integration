@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+    <record id="unlock" model="pos.category">
+        <field name="name">Mobile unlock</field>
+        <field name="image" type="base64" file="unlockbase_sales/static/src/img/lock.png"/>
+    </record>
+</data>
+</openerp>
