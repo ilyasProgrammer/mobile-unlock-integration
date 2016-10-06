@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+    <record model="ir.ui.view" id="view_pos_pos_form_unlockbase_sales">
+        <field name="name">unlockbase_sales.pos.order.form.view.inherit</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group/field[@name='fiscal_position_id']" position="after">
+                <field name="ub_order_state"/>
+            </xpath>
+            <xpath expr="//header/field[@name='state']" position="before">
+                <button name="action_place_order" string="Place unlock order" class="oe_highlight" type="object" context="{'pos_session_id' : session_id}"/>
+                <button name="action_cancel_order" string="Cancel unlock order" class="oe_highlight" type="object" attrs="{'invisible':[('ub_order_state','!=','placed')]}/>
+            </xpath>
+            <xpath expr="//notebook/page[last()]" position="after">
+                <page id="unlockbase_mobile_data" string="Unlock">
+                    <group string="Mobile unlock data">
+                        <field name="IMEI"/>
+                        <field name="email"/>
+                        <field name="ub_network" attrs="{'invisible': [('ub_network', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_mobile" attrs="{'invisible': [('ub_mobile', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_provider" attrs="{'invisible': [('ub_provider', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_pin" attrs="{'invisible': [('ub_pin', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_kbh" attrs="{'invisible': [('ub_kbh', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_mep" attrs="{'invisible': [('ub_mep', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_prd" attrs="{'invisible': [('ub_prd', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_sn" attrs="{'invisible': [('ub_sn', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_secro" attrs="{'invisible': [('ub_secro', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_reference" attrs="{'invisible': [('ub_reference', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_servicetag" attrs="{'invisible': [('ub_servicetag', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_icloudemail" attrs="{'invisible': [('ub_icloudemail', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_icloudphone" attrs="{'invisible': [('ub_icloudphone', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_icloududid" attrs="{'invisible': [('ub_icloududid', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_type" attrs="{'invisible': [('ub_type', 'in', ['', None, 'None'])]}"/>
+                        <field name="ub_locks" attrs="{'invisible': [('ub_locks', 'in', ['', None, 'None', 0 , '0'])]}"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</data>
+</openerp>

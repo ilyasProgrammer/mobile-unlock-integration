@@ -23,7 +23,7 @@
     "data": [
         "data/pos_categories.xml",
         "data/ir_config_parameter.xml",
-        "views.xml",
+        "views/pos_order.xml",
     ],
     "qweb": [
     ],

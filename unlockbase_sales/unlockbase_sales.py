@@ -42,26 +42,27 @@ class UnlockBase(models.Model):
 class PosOrder(models.Model):
     _inherit = 'pos.order'
 
-    unlockbase_order_id = fields.Char(string='Unlock order id', default='None', readonly=True)
-    unlockbase_order_state = fields.Selection([('draft', 'Draft'), ('placed', 'Placed'), ('validated', 'Validated')], string='Unlock state',  default='draft', readonly=True)
+    ub_codes = fields.Char(string='Unlock codes')
+    ub_order_id = fields.Char(string='Unlock order id', default='None', readonly=True)
+    ub_order_state = fields.Selection([('draft', 'Draft'), ('placed', 'Placed'), ('validated', 'Validated'), ('canceled', 'Canceled')], string='Unlock state',  default='draft', readonly=True)
     IMEI = fields.Char(string='IMEI', default='None', required=True)
     email = fields.Char(string='email', default='None', required=True)
-    unlockbase_network = fields.Char(string='network', default='None')
-    unlockbase_mobile = fields.Char(string='mobile', default='None')
-    unlockbase_provider = fields.Char(string='provider', default='None')
-    unlockbase_pin = fields.Char(string='pin', default='None')
-    unlockbase_kbh = fields.Char(string='kbh', default='None')
-    unlockbase_mep = fields.Char(string='mep', default='None')
-    unlockbase_prd = fields.Char(string='prd', default='None')
-    unlockbase_sn = fields.Char(string='sn', default='None')
-    unlockbase_secro = fields.Char(string='secro', default='None')
-    unlockbase_reference = fields.Char(string='reference', default='None')
-    unlockbase_servicetag = fields.Char(string='servicetag', default='None')
-    unlockbase_icloudemail = fields.Char(string='icloudemail', default='None')
-    unlockbase_icloudphone = fields.Char(string='icloudphone', default='None')
-    unlockbase_icloududid = fields.Char(string='icloududid', default='None')
-    unlockbase_type = fields.Char(string='type', default='None')
-    unlockbase_locks = fields.Char(string='locks', default='None')
+    ub_network = fields.Char(string='network', default='None')
+    ub_mobile = fields.Char(string='mobile', default='None')
+    ub_provider = fields.Char(string='provider', default='None')
+    ub_pin = fields.Char(string='pin', default='None')
+    ub_kbh = fields.Char(string='kbh', default='None')
+    ub_mep = fields.Char(string='mep', default='None')
+    ub_prd = fields.Char(string='prd', default='None')
+    ub_sn = fields.Char(string='sn', default='None')
+    ub_secro = fields.Char(string='secro', default='None')
+    ub_reference = fields.Char(string='reference', default='None')
+    ub_servicetag = fields.Char(string='servicetag', default='None')
+    ub_icloudemail = fields.Char(string='icloudemail', default='None')
+    ub_icloudphone = fields.Char(string='icloudphone', default='None')
+    ub_icloududid = fields.Char(string='icloududid', default='None')
+    ub_type = fields.Char(string='type', default='None')
+    ub_locks = fields.Char(string='locks', default='None')
 
     @api.model
     def create_from_ui(self, context):
@@ -73,26 +74,201 @@ class PosOrder(models.Model):
     @api.model
     def set_fields(self, order_id):
         order = self.env['pos.order'].browse(order_id)
-        unlock_tool = order.lines[0].product_id.unlockbase_tool_ids[0]
-        order.unlockbase_network = unlock_tool.requires_network
-        order.unlockbase_mobile = unlock_tool.requires_mobile
-        order.unlockbase_provider = unlock_tool.requires_provider
-        order.unlockbase_pin = unlock_tool.requires_pin
-        order.unlockbase_kbh = unlock_tool.requires_kbh
-        order.unlockbase_mep = unlock_tool.requires_mep
-        order.unlockbase_prd = unlock_tool.requires_prd
-        order.unlockbase_sn = unlock_tool.requires_sn
-        order.unlockbase_secro = unlock_tool.requires_secro
-        order.unlockbase_reference = unlock_tool.requires_reference
-        order.unlockbase_servicetag = unlock_tool.requires_servicetag
-        order.unlockbase_icloudemail = unlock_tool.requires_icloudemail
-        order.unlockbase_icloudphone = unlock_tool.requires_icloudphone
-        order.unlockbase_icloududid = unlock_tool.requires_icloududid
-        order.unlockbase_type = unlock_tool.requires_type
-        order.unlockbase_locks = unlock_tool.requires_locks
+        tool = order.lines[0].product_id.unlockbase_tool_ids[0]
+        order.ub_network = tool.req_network
+        order.ub_mobile = tool.req_mobile
+        order.ub_provider = tool.req_provider
+        order.ub_pin = tool.req_pin
+        order.ub_kbh = tool.req_kbh
+        order.ub_mep = tool.req_mep
+        order.ub_prd = tool.req_prd
+        order.ub_sn = tool.req_sn
+        order.ub_secro = tool.req_secro
+        order.ub_reference = tool.req_reference
+        order.ub_servicetag = tool.req_servicetag
+        order.ub_icloudemail = tool.req_icloudemail
+        order.ub_icloudphone = tool.req_icloudphone
+        order.ub_icloududid = tool.req_icloududid
+        order.ub_type = tool.req_type
+        order.ub_locks = tool.req_locks
 
-    def unlockbase_place_order(self):
-        return self.unlockbase_send_action({'Action': 'PlaceOrder'})
+    def check_fields(self, order, tool):
+        vals = {'IMEI': order.IMEI, 'Email': order.email}
+
+        if nice(tool.req_network):
+            if lame(order.ub_network):
+                raise UserError(_('Please set unlock network.'))
+            else:
+                vals['Network'] = order.ub_network
+
+        if nice(tool.req_mobile):
+            if lame(order.ub_mobile):
+                raise UserError(_('Please set unlock mobile id.'))
+            else:
+                vals['Mobile'] = order.ub_network
+
+        if nice(tool.req_provider):
+            if lame(order.ub_provider):
+                raise UserError(_('Please set unlock provider.'))
+            else:
+                vals['Provider'] = order.ub_provider
+
+        if nice(tool.req_pin):
+            if lame(order.ub_pin):
+                raise UserError(_('Please set unlock pin.'))
+            else:
+                vals['PIN'] = order.ub_pin
+
+        if nice(tool.req_kbh):
+            if lame(order.ub_kbh):
+                raise UserError(_('Please set unlock KBH.'))
+            else:
+                vals['KBH'] = order.ub_kbh
+
+        if nice(tool.req_mep):
+            if lame(order.ub_mep):
+                raise UserError(_('Please set unlock MEP.'))
+            else:
+                vals['MEP'] = order.ub_mep
+
+        if nice(tool.req_prd):
+            if lame(order.ub_prd):
+                raise UserError(_('Please set unlock PRD.'))
+            else:
+                vals['PRD'] = order.ub_prd
+
+        if nice(tool.req_type):
+            if lame(order.ub_type):
+                raise UserError(_('Please set unlock type.'))
+            else:
+                vals['Type'] = order.ub_type
+
+        if nice(tool.req_locks):
+            if lame(order.ub_locks):
+                raise UserError(_('Please set unlock locks.'))
+            else:
+                vals['Locks'] = order.ub_locks
+
+        if nice(tool.req_sn):
+            if lame(order.ub_sn):
+                raise UserError(_('Please set unlock SN.'))
+            else:
+                vals['SN'] = order.ub_sn
+
+        if nice(tool.req_secro):
+            if lame(order.ub_secro):
+                raise UserError(_('Please set unlock SECRO.'))
+            else:
+                vals['SecRO'] = order.ub_secro
+
+        # Values below returned after 'Action': 'GetTools' but did not described in API v3
+        #
+        # if nice(tool.req_reference):
+        #     if lame(order.ub_reference):
+        #         raise UserError(_('Please set unlock reference.'))
+        #     else:
+        #         vals['Mobile'] = order.ub_reference
+        #
+        # if nice(tool.req_servicetag):
+        #     if lame(order.ub_servicetag):
+        #         raise UserError(_('Please set unlock service tag.'))
+        #     else:
+        #         vals['Mobile'] = order.ub_servicetag
+        #
+        # if nice(tool.req_icloudemail):
+        #     if lame(order.ub_icloudemail):
+        #         raise UserError(_('Please set unlock ub_icloude mail.'))
+        #     else:
+        #         vals['Mobile'] = order.ub_icloudemail
+        #
+        # if nice(tool.req_icloudphone):
+        #     if lame(order.ub_icloudphone):
+        #         raise UserError(_('Please set unlock icloud phone.'))
+        #     else:
+        #         vals['Mobile'] = order.ub_icloudphone
+        #
+        # if nice(tool.req_icloududid):
+        #     if lame(order.ub_icloududid):
+        #         raise UserError(_('Please set unlock icloud udid.'))
+        #     else:
+        #         vals['Mobile'] = order.ub_icloududid
+
+        return vals
+
+    # ACTIONS #
+    @api.model
+    def action_place_order(self, ids):
+        order = self.env['pos.order'].browse(ids)
+        tool = order.lines[0].product_id.unlockbase_tool_ids[0]
+        vals = self.check_fields(order, tool)
+        res = self.unlockbase_place_order(vals)
+        if res.find('Error') == 0:
+            raise UserError(res.find('Error').text)
+        try:
+            suc = res.find('Success').text
+            _logger.info(suc)
+            order.ub_order_id = res.find('ID').text
+        except:
+            raise UserError('Bad order')
+        order.ub_order_state = 'placed'
+        if res.find('Codes') != 0:
+            order.ub_order_id = res.find('Codes').text  # For instant tools
+
+    @api.model
+    def action_cancel_order(self, ids):
+        order = self.env['pos.order'].browse(ids)
+        vals = {'ID': order.ub_order_id}
+        res = self.unlockbase_cancel_order(vals)
+        if res.find('Error') != 0:
+            raise UserError('Order can not be canceled. %s' % res.find('Error').text)
+        if res.find('Pending') != 0:
+            raise UserError('Order could not be cancelled now and a cancellation request has been sent. %s' % res.find('Pending').text)
+        if res.find('Success') != 0:
+            order.ub_order_state = 'canceled'
+            _logger.info('Order has been canceled. %s' % res.find('Success').text)
+
+    @api.model  # TODO
+    def action_verify_order(self, ids):
+        order = self.env['pos.order'].browse(ids)
+        vals = {'ID': order.ub_order_id}
+        res = self.unlockbase_verify_order(vals)
+        if res.find('Error') != 0:
+            raise UserError('Order can not be canceled. %s' % res.find('Error').text)
+        if res.find('Pending') != 0:
+            raise UserError('Order could not be cancelled now and a cancellation request has been sent. %s' % res.find('Pending').text)
+        if res.find('Success') != 0:
+            order.ub_order_state = 'canceled'
+            _logger.info('Order has been canceled. %s' % res.find('Success').text)
+
+    @api.model  # TODO
+    def action_retry_order(self, ids):
+        order = self.env['pos.order'].browse(ids)
+        vals = {'ID': order.ub_order_id}
+        res = self.unlockbase_retry_order(vals)
+        if res.find('Error') != 0:
+            raise UserError('Order can not be canceled. %s' % res.find('Error').text)
+        if res.find('Pending') != 0:
+            raise UserError('Order could not be cancelled now and a cancellation request has been sent. %s' % res.find('Pending').text)
+        if res.find('Success') != 0:
+            order.ub_order_state = 'canceled'
+            _logger.info('Order has been canceled. %s' % res.find('Success').text)
+
+    # API v3 unlockbase #
+    def unlockbase_verify_order(self, vals):
+        vals['Action'] = 'VerifyOrder'
+        return self.unlockbase_send_action(vals)
+
+    def unlockbase_retry_order(self, vals):
+        vals['Action'] = 'RetryOrder'
+        return self.unlockbase_send_action(vals)
+
+    def unlockbase_place_order(self, vals):
+        vals['Action'] = 'PlaceOrder'
+        return self.unlockbase_send_action(vals)
+
+    def unlockbase_cancel_order(self, vals):
+        vals['Action'] = 'CancelOrder'
+        return self.unlockbase_send_action(vals)
 
     def unlockbase_account_info(self):
         return self.unlockbase_send_action({'Action': 'AccountInfo'})
@@ -106,43 +282,10 @@ class PosOrder(models.Model):
         response = urllib2.urlopen(req)
         the_page = response.read()
         if 'Unauthorized IP address' in the_page:
-            _logger.error(
-                'Unauthorized IP address ERROR. Please check security configuration in unlockbase.com settings.')
+            _logger.error('Unauthorized IP address ERROR. Please check security configuration in unlockbase.com settings.')
             return False
         res = xml.etree.ElementTree.fromstring(the_page)
         return res
-
-    @api.model
-    def action_place_order(self, ids):
-        order = self.env['pos.order'].browse(ids)
-        unlock_tool = order.lines[0].product_id.unlockbase_tool_ids[0]
-        vals = {'IMEI': order.IMEI, 'Email': order.email}
-        if unlock_tool.requires_network != 'None':
-            if lame(order.unlockbase_network):
-                raise UserError(_('Please set unlock network.'))
-            else:
-                vals['Network'] = order.unlockbase_network
-        if unlock_tool.requires_mobile != 'None':
-            if lame(order.unlockbase_mobile):
-                raise UserError(_('Please set unlock mobile id.'))
-            else:
-                vals['Mobile'] = order.unlockbase_network
-        if unlock_tool.requires_provider != 'None':
-            if lame(order.unlockbase_provider):
-                raise UserError(_('Please set unlock provider.'))
-            else:
-                vals['Mobile'] = order.unlockbase_provider
-
-
-        # TODO other fields
-        res = self.unlockbase_place_order(vals)
-        try:
-            suc = res.find('Success').text
-            _logger.info(suc)
-            order.unlockbase_order_id = res.find('ID').text
-        except:
-            raise UserError(_('Bad order'))  # TODO
-        order.unlockbase_order_state = 'placed'
 
 
 def nice(s):

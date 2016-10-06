@@ -40,22 +40,22 @@ class UnlockBase(models.Model):
                 'delivery_min': 'Delivery.Min',
                 'delivery_max': 'Delivery.Max',
                 'delivery_unit': 'Delivery.Unit',
-                'requires_network': 'Requires.Network',
-                'requires_mobile': 'Requires.Mobile',
-                'requires_provider': 'Requires.Provider',
-                'requires_pin': 'Requires.PIN',
-                'requires_kbh': 'Requires.KBH',
-                'requires_mep': 'Requires.MEP',
-                'requires_prd': 'Requires.PRD',
-                'requires_sn': 'Requires.SN',
-                'requires_secro': 'Requires.SecRO',
-                'requires_reference': 'Requires.Reference',
-                'requires_servicetag': 'Requires.ServiceTag',
-                'requires_icloudemail': 'Requires.ICloudEmail',
-                'requires_icloudphone': 'Requires.ICloudPhone',
-                'requires_icloududid': 'Requires.ICloudUDID',
-                'requires_type': 'Requires.Type',
-                'requires_locks': 'Requires.Locks',
+                'req_network': 'Requires.Network',
+                'req_mobile': 'Requires.Mobile',
+                'req_provider': 'Requires.Provider',
+                'req_pin': 'Requires.PIN',
+                'req_kbh': 'Requires.KBH',
+                'req_mep': 'Requires.MEP',
+                'req_prd': 'Requires.PRD',
+                'req_sn': 'Requires.SN',
+                'req_secro': 'Requires.SecRO',
+                'req_reference': 'Requires.Reference',
+                'req_servicetag': 'Requires.ServiceTag',
+                'req_icloudemail': 'Requires.ICloudEmail',
+                'req_icloudphone': 'Requires.ICloudPhone',
+                'req_icloududid': 'Requires.ICloudUDID',
+                'req_type': 'Requires.Type',
+                'req_locks': 'Requires.Locks',
                 }
 
     @api.model
@@ -236,22 +236,22 @@ class UnlockBaseTool(models.Model):
     delivery_max = fields.Char()
     delivery_unit = fields.Char()
     IMEI = fields.Char()
-    requires_network = fields.Char()
-    requires_mobile = fields.Char()
-    requires_provider = fields.Char()
-    requires_pin = fields.Char()
-    requires_kbh = fields.Char()
-    requires_mep = fields.Char()
-    requires_prd = fields.Char()
-    requires_sn = fields.Char()
-    requires_secro = fields.Char()
-    requires_reference = fields.Char()
-    requires_servicetag = fields.Char()
-    requires_icloudemail = fields.Char()
-    requires_icloudphone = fields.Char()
-    requires_icloududid = fields.Char()
-    requires_type = fields.Char()
-    requires_locks = fields.Char()
+    req_network = fields.Char()
+    req_mobile = fields.Char()
+    req_provider = fields.Char()
+    req_pin = fields.Char()
+    req_kbh = fields.Char()
+    req_mep = fields.Char()
+    req_prd = fields.Char()
+    req_sn = fields.Char()
+    req_secro = fields.Char()
+    req_reference = fields.Char()
+    req_servicetag = fields.Char()
+    req_icloudemail = fields.Char()
+    req_icloudphone = fields.Char()
+    req_icloududid = fields.Char()
+    req_type = fields.Char()
+    req_locks = fields.Char()
 
 
 def make_tech_name(name):
