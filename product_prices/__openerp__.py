@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 {
-    "name": """product prices management""",
-    "summary": """product prices management""",
-    "description": """product prices management""",
-    "category": "Web",
+    "name": """Product prices management""",
+    "summary": """Product prices management""",
+    "description": """Set prices for custom products groups""",
+    "category": "Sales",
     "images": [],
     "version": "1.0.0",
 
