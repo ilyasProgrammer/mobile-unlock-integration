@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 {
-    "name": """unlockbase service sales""",
-    "summary": """unlockbase service sales""",
-    "description": """Sales of unlock service""",
+    "name": """product prices management""",
+    "summary": """product prices management""",
+    "description": """product prices management""",
     "category": "Web",
     "images": [],
     "version": "1.0.0",
@@ -16,14 +16,11 @@
     "depends": [
         "base",
         "web",
-        "point_of_sale",
-        "unlockbase",
+        "product",
     ],
-    "external_dependencies": {'python': ['bs4']},
+    "external_dependencies": {},
     "data": [
-        "data/pos_categories.xml",
-        "data/ir_config_parameter.xml",
-        "views.xml",
+        'wizard.xml',
     ],
     "qweb": [
     ],
@@ -32,7 +29,7 @@
 
     'post_load': '',
     "pre_init_hook": None,
-    "post_init_hook": '_set_pos_category',
+    "post_init_hook": None,
     "installable": True,
     "auto_install": False,
 }

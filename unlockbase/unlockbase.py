@@ -164,6 +164,7 @@ class UnlockBase(models.Model):
 
     @api.model
     def create_mobiles_tools(self):
+        markup = self.env['ir.config_parameter'].sudo().get_param('unlockbase.markup')
         image_path = openerp.modules.get_module_resource('unlockbase', 'static/src/img', 'lock.png')
         mobiles = self.env['product.product'].search([('unlock_mobile_id', '!=', '')])
         for mobile in mobiles:
@@ -175,7 +176,8 @@ class UnlockBase(models.Model):
                         'unlockbase_tool_ids': [(4, tool.id,)],
                         'type': 'service',
                         'unlock_service': True,
-                        'list_price': tool.credits,
+                        'standard_price': tool.credits,
+                        'list_price': tool.credits * (1+(markup/100)),
                         'image': open(image_path, 'rb').read().encode('base64'),
                         'categ_id': mobile_tools_cat.id}
                 if len(found_tools) == 0:
