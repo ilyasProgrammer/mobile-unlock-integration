@@ -6,13 +6,18 @@
             <field name="model">product.prices</field>
             <field name="arch" type="xml">
                 <form string="Set values">
-                    <p>Enter value in %:
+                    <group string="Enter markup value in %:">
                         <field name="markup" string='Markup' required='1'/>
-                    </p>
+                    </group>
                     <footer>
                         <button name="set_prices" string="Set prices" type="object" class="btn-primary"/>
                         <button string="Cancel" class="btn-default" special="cancel"/>
                     </footer>
+                    <pre class="oe_grey">
+New price =  Cost * Markup %
+Example : Markup = 10 %
+New price = 100$ * (1+10/100) = 110$
+                    </pre>
                 </form>
             </field>
         </record>
