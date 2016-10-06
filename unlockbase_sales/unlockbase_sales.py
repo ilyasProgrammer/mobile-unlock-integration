@@ -12,19 +12,6 @@ _logger = logging.getLogger("# " + __name__)
 _logger.setLevel(logging.DEBUG)
 
 
-# class PosOrder(models.Model):
-#     _inherit = 'pos.order'
-#
-#     @api.model
-#     def create_from_ui(self):
-#         res = super(PosOrder, self).create_from_ui()
-#         unlock_product = self.pool['product.product'].search([('name', '=', 'unlock')])
-#         for order in self._context:
-#             for line in order['data']['lines']:
-#                 pass # TODO
-#         return res
-
-
 class UnlockBase(models.Model):
     _inherit = 'unlockbase'
 
@@ -140,6 +127,13 @@ class PosOrder(models.Model):
                 raise UserError(_('Please set unlock mobile id.'))
             else:
                 vals['Mobile'] = order.unlockbase_network
+        if unlock_tool.requires_provider != 'None':
+            if lame(order.unlockbase_provider):
+                raise UserError(_('Please set unlock provider.'))
+            else:
+                vals['Mobile'] = order.unlockbase_provider
+
+
         # TODO other fields
         res = self.unlockbase_place_order(vals)
         try:
