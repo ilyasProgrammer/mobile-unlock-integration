@@ -1,2 +1,2 @@
 # Unlock mobile API integration for Odoo
-GSM Arena and so on
+GSM Arena web service integration
